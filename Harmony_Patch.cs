@@ -14,6 +14,12 @@ namespace Taurunti_YouCanAlwaysPause
             {
                 HarmonyInstance harmonyInstance = HarmonyInstance.Create("Taurunti_YouCanAlwaysPause");
 
+                harmonyInstance.Patch(
+                    original: typeof(BossBird).GetMethod("EscapeInit", AccessTools.all), 
+                    prefix: null, 
+                    postfix: new HarmonyMethod(typeof(Harmony_Patch).GetMethod("TYCAP_ApocalypseBird_EscapeInit"))
+                );
+
                 var methodsToReplace = new List<string>
                 {
                     "CheckTimeStopBlocked",
@@ -21,7 +27,6 @@ namespace Taurunti_YouCanAlwaysPause
                     "CheckEscapeBlocked",
                     "CheckManaulBlocked"
                 };
-
                 foreach (var oldMethodName in methodsToReplace)
                 {
                     string newMethodName = "TYCAP_" + oldMethodName;
@@ -40,29 +45,14 @@ namespace Taurunti_YouCanAlwaysPause
         }
 
         // How to do method replacement
-        /* https://github.com/pardeike/Harmony/issues/186#issuecomment-491525920
-        
-        static class InjectedClass
-        {
-            public static void Start()
-            {
-                HarmonyInstance harmony = HarmonyInstance.Create("com.blah.somepatch");
-                harmony.Patch(
-                    original: AccessTools.Method(typeof(TargetClass), "GetRandomInteger"),
-                    prefix: new HarmonyMethod(typeof(InjectedClass), nameof(InjectedClass.GetFixedInteger))
-                );
-            }
+        // https://github.com/pardeike/Harmony/issues/186#issuecomment-491525920
 
-            public static bool GetFixedInteger(int seed, ref int __result)
-            {
-                __result = 42; // set return value
-                return false; // don't run original method
-                // if this method returned true, then the original method would also run
-            }
+        // Removes apoc bird from "things which interfere with pausing" immediately after it is (presumably) added
+        public static void TYCAP_ApocalypseBird_EscapeInit(BossBird __instance)
+        {
+            PlaySpeedSettingUI.instance.ReleaseSetting(__instance);
         }
 
-
-        */
         public static bool TYCAP_CheckTimeStopBlocked(bool isRelease, ref bool __result) { __result = false; return false; }
         public static bool TYCAP_CheckTimeMultiplierBlocked(ref bool __result) { __result = false; return false; }
         public static bool TYCAP_CheckEscapeBlocked(ref bool __result) { __result = false; return false; }
